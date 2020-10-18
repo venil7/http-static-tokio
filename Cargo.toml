@@ -1,0 +1,11 @@
+[package]
+name = "http-static-tokio"
+version = "0.2.0"
+authors = ["darkruby"]
+edition = "2018"
+
+
+[dependencies]
+uriparse = "0.6.3"
+http_header = "0.7.0"
+tokio = { version = "0.2", features = ["full"] }

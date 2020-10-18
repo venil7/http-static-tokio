@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "async-await",
+      "program": "${workspaceRoot}/target/debug/async-await",
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
