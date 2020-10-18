@@ -4,6 +4,8 @@ extern crate http_header;
 use http_header::{Header, ResponseBuilder};
 use std::convert::TryFrom;
 use std::error::Error;
+use std::ffi::OsStr;
+use std::path::Path;
 use tokio::fs;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::prelude::*;
@@ -71,14 +73,15 @@ async fn not_implemented(socket: &mut TcpStream) -> Result<(), Box<dyn Error>> {
     Ok(ok)
 }
 
-async fn serve_static(path: &str, socket: &mut TcpStream) -> Result<(), Box<dyn Error>> {
-    match fs::read(path.as_ref() as &str).await {
+async fn serve_static(filename: &str, socket: &mut TcpStream) -> Result<(), Box<dyn Error>> {
+    match fs::read(filename).await {
         Ok(mut content) => {
+            let mime = mime_type(filename);
             let mut response_header = ResponseBuilder::new()
                 .version(data!("HTTP/1.1"))
                 .status(200)
                 .reason(data!("OK"))
-                .field(data!("content-type"), data!("text/html"))
+                .field(data!("content-type"), data!(mime))
                 .field(data!("content-length"), data!(content.len().to_string()))
                 .build()?
                 .to_vec();
@@ -100,5 +103,19 @@ async fn serve_static(path: &str, socket: &mut TcpStream) -> Result<(), Box<dyn 
             let ok = socket.write_all(&response_header).await?;
             return Ok(ok);
         }
+    }
+}
+
+fn mime_type(filename: &str) -> String {
+    match Path::new(filename).extension().and_then(OsStr::to_str) {
+        Some("html") | Some("htm") => "text/html".to_owned(),
+        Some("jpg") | Some("jpeg") => "image/jpeg".to_owned(),
+        Some("txt") => "text/plain".to_owned(),
+        Some("css") => "text/css".to_owned(),
+        Some("png") => "image/png".to_owned(),
+        Some("gif") => "image/gif".to_owned(),
+        Some("json") => "application/json".to_owned(),
+        Some("js") => "application/javascript".to_owned(),
+        _ => "application/octet-stream".to_owned(),
     }
 }
